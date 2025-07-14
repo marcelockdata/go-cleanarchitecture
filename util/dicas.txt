@@ -1,0 +1,27 @@
+Configuração extenção rest.http
+
+https://www.trpkovski.com/2023/03/19/setting-up-global-variables-in-the-rest-client-vs-code-extension
+
+
+
+http://localhost:3000/swagger/index.html
+
+
+
+swag init -g cmd/main.go
+
+
+6. Solução Alternativa
+Se o problema persistir, tente mover o main.go para o diretório raiz temporariamente e execute o swag init sem o parâmetro -g:
+
+bash
+Copy
+mv cmd/main.go .
+swag init --dir .
+
+
+Depois de gerar a documentação, mova o main.go de volta para o diretório cmd:
+
+bash
+Copy
+mv main.go cmd/
