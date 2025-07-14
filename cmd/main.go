@@ -35,7 +35,8 @@ import (
 // @in header
 // @name Authorization
 func main() {
-	db, err := repository.InitDB("./products.db")
+	// Ajuste para funcionar no Docker
+	db, err := repository.InitDB("/app/products.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -47,21 +48,24 @@ func main() {
 	productUsecase := usecase.NewProductUsecase(productRepository)
 	userUsecase := usecase.NewUserUsecase(userRepository)
 
+	productHandler := handler.NewProductHandler(productUsecase)
+	userHandler := handler.NewUserHandler(userUsecase)
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	r.Post("/auth", handler.NewUserHandler(userUsecase).Authenticate)
+	r.Post("/auth", userHandler.Authenticate)
 
 	r.Route("/products", func(r chi.Router) {
 		r.Use(authhmiddleware.AuthMiddleware)
-		r.Post("/", handler.NewProductHandler(productUsecase).CreateProduct)
-		r.Get("/", handler.NewProductHandler(productUsecase).ListProducts)
-		r.Get("/{id}", handler.NewProductHandler(productUsecase).GetProductById)
-		r.Put("/{id}", handler.NewProductHandler(productUsecase).UpdateProduct)
-		r.Delete("/{id}", handler.NewProductHandler(productUsecase).DeleteProduct)
+		r.Post("/", productHandler.CreateProduct)
+		r.Get("/", productHandler.ListProducts)
+		r.Get("/{id}", productHandler.GetProductById)
+		r.Put("/{id}", productHandler.UpdateProduct)
+		r.Delete("/{id}", productHandler.DeleteProduct)
 	})
 
 	// Swagger route
@@ -70,5 +74,7 @@ func main() {
 	))
 
 	log.Println("Server running on :3000")
-	http.ListenAndServe(":3000", r)
+	if err := http.ListenAndServe(":3000", r); err != nil {
+		log.Fatalf("Server failed: %v", err)
+	}
 }
